@@ -1,68 +1,99 @@
 const calorieCounter = function () {
-  let form = document.querySelector('form')
-  let resetButton = document.querySelector('.form__reset-button')
-  let submitButton = document.querySelector('.form__submit-button')
-  let resultTable = document.querySelector('.counter__result--hidden ')
-  let caloriesNorm = document.querySelector('.counter__result--hidden ')
-  let caloriesMin = document.querySelector('.counter__result--hidden ')
-  let caloriesMax = document.querySelector('.counter__result--hidden ')
+  let form = document.querySelector('form');
+  let resetButton = document.querySelector('.form__reset-button');
+  let submitButton = document.querySelector('.form__submit-button');
+  let resultTable = document.querySelector('.counter__result--hidden');
+  let inputParameters = document.querySelectorAll('input[type="text"]');
 
-
+  let ageValue;
+  let heightValue;
+  let weightValue;
+  let genderCoefficient;
 
   const defaultParametersValue = "";
-  const defaultGender = "male";
-  const defaultActivity = "min";
+  let genderChoice;
+  let activityChoice;
 
-  form.onchange = function () {
-    enableClearButton();
+  let caloriesNorm = document.querySelector('#calories-norm');
+  let caloriesMin = document.querySelector('#calories-minimal');
+  let caloriesMax = document.querySelector('#calories-maximal');
+
+
+  let activityCoefficients = {
+    "min": 1.2,
+    "low": 1.375,
+    "medium": 1.55,
+    "high": 1.725,
+    "max": 1.9
   }
 
-  const enableClearButton = function () {
-    let ageValue = form.querySelector('#age').value
-    let heightValue = form.querySelector('#height').value
-    let weightValue = form.querySelector('#weight').value
-    if (ageValue !== defaultParametersValue || heightValue !== defaultParametersValue || weightValue !== defaultParametersValue) {
-      resetButton.removeAttribute('disabled')
-    } if (ageValue !== defaultParametersValue && heightValue !== defaultParametersValue && weightValue !== defaultParametersValue) {
-      submitButton.removeAttribute('disabled')
+  let regex = /[^\d]/g; // регулярка только цифры
+  for (let inputParameter of inputParameters) {
+    console.log(inputParameter.value)
+    inputParameter.oninput = function () {
+      inputParameter.value = inputParameter.value.replace(regex, '');
     }
   }
 
-  const resultCount = function() {
-
-    
+  form.onchange = function () {
+    ageValue = form.querySelector('#age').value
+    heightValue = form.querySelector('#height').value
+    weightValue = form.querySelector('#weight').value
+    activityChoice = activityCoefficients[form.activity.value]
+    genderChoice = form.gender.value
+    handleResetButton();
+    handleSubmitButton();
   }
 
+  const handleResetButton = function () {
+    if (ageValue !== defaultParametersValue || heightValue !== defaultParametersValue || weightValue !== defaultParametersValue) {
+      resetButton.removeAttribute('disabled')
+    } else {
+      resetButton.setAttribute('disabled', '')
+    }
+  }
+  const handleSubmitButton = function () {
+    if (ageValue !== defaultParametersValue && heightValue !== defaultParametersValue && weightValue !== defaultParametersValue) {
+      submitButton.removeAttribute('disabled')
+    } else {
+      submitButton.setAttribute('disabled', '')
+    }
+  }
 
-  submitButton.onclick = function() {
+  const resultCount = function () {
+    let normResult;
+    let minResult;
+    let maxResult;
+
+    if (genderChoice = "male") {
+      genderCoefficient = 5
+    } else {
+      genderCoefficient = -161
+    }
+    normResult = Math.round(((10 * weightValue) + (6.25 * heightValue) - (5 * ageValue) + genderCoefficient) * activityChoice);
+    caloriesNorm.textContent = formatResult(normResult);
+    minResult = Math.round(normResult * 0.85)
+    caloriesMin.textContent = formatResult(minResult);
+    maxResult = Math.round(normResult * 1.15)
+    caloriesMax.textContent = formatResult(maxResult);
+  }
+
+  submitButton.onclick = function (event) {
     event.preventDefault();
     resultCount()
     resultTable.classList.remove('counter__result--hidden')
   }
 
-
-  // resetButton.onclick = function () {
-  //   resetButton.classList.add('form__reset-button:disabled')
-  // }
-
-  const genderRadio = document.getElementsByName('gender')
-  for (let i = 0; i < genderRadio.length; i++) {
-    genderRadio[i].onchange = function () {
-      let genderChoice = genderRadio[i].value;
-    }    
+  resetButton.onclick = function () {
+    resultTable.classList.add('counter__result--hidden')
+    submitButton.setAttribute('disabled', '')
+    resetButton.setAttribute('disabled', '')
+    form.reset();
   }
 
-
-  const activityradio = document.getElementsByName('activity')
-  for (let i = 0; i < activityradio.length; i++) {
-    activityradio[i].onchange = function () {
-      let activityChoice = activityradio[i].value;
-    }
-  }
-  
-
-
-
+  const formatResult = (num) => {
+    return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, `$1 `);
+  };
 }
 
 calorieCounter()
